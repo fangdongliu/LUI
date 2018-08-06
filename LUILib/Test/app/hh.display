@@ -1,0 +1,52 @@
+﻿display{
+radius:200;
+duration:0.3;
+background:radial(#ffffffff 0.0,#ffaabbcc 1.0,#ffffff00 1.0);
+shadow:20 #88f0f0ff;
+}
+display:hover{
+radius:200;
+background:radial(#ffffffff 0.0,#ffaabbcc 0.0,#ffffff00 1.0);
+duration:0.3;
+shadow:20 #88ffff00;
+}
+
+display:focus{
+background:#ffaabb00;
+}
+
+display:capture{
+background:image("QQ图片20180421220212.jpg");
+}
+
+display2{
+background:#ff000000;
+duration:0.3;
+shadow:10 #20000000;
+}
+
+display3{
+background:#ff444444;
+
+}
+
+round{
+radius:200;
+duration:0.3;
+}
+
+dark{
+background:radial(#ffffffff 0.0,#ffaabbcc 1.0,#ffffff00 1.0);
+}
+
+dark:hover{
+background:radial(#ffffffff 0.0,#ffaabbcc 0.0,#ffffff00 1.0);
+}
+
+yellow{
+background:radial(#ffffff00 0.0,#ffaabbcc 1.0,#ffffff00 1.0);
+}
+
+yellow:hover{
+background:radial(#ffffff00 0.0,#ffaabbcc 0.0,#ffffff00 1.0);
+}

@@ -1,0 +1,22 @@
+layout{
+	width:(0,1);
+height:(0,1);
+
+}
+layout2{
+width:200;
+height:200;
+
+left:100;
+top:100;
+
+}
+
+layout3{
+width:100;
+height:100;
+
+left:100;
+top:250;
+
+}
