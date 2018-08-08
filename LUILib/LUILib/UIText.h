@@ -18,7 +18,7 @@ namespace LUI {
 
 	public:
 
-		UIElement * Copy()override;
+		UIElement * CopyData()override;
 		
 		void SetAttr(std::string&, std::string&)override;
 

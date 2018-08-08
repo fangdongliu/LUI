@@ -1,0 +1,18 @@
+﻿<button>
+<draggable>
+<linear float="right">
+<text value="1237890" id="hh"></text>
+<close color="#ff0000"></close><minimize color="#ff0000"/><maxmize color="#ff0000"/>
+<input hint="输入" hide disabled placeHolder="请输入用户名" onchar='alert' onkey="alert"></input>
+<input placeHolder="请输入密码"></input>
+<text value="123      4567890"></text>
+
+<text value="121234235434567890" onclick="alert" capturable id="gg"></text>
+<radiogroup float="right">
+<radio selectedColor='#009900'><text value="234567"/></radio><radio/><radio/><radio/><radio/><radio/>
+</radiogroup>
+<checkbox/><checkbox/><checkbox/><switch/>
+</linear>
+</draggable>
+</button>
+

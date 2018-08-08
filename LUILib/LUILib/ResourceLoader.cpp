@@ -7,6 +7,7 @@
 #include"Page.h"
 #include"UIInput.h"
 #include"UIButton.h"
+#include"UIDragable.h"
 using namespace LUI;
 using namespace D2D1;
 using namespace std;
@@ -115,9 +116,9 @@ namespace LayoutLoader {
 				num = *s - '0' + num * 10;
 				s++;
 			}
-			number = num;
+			number = (float)num;
 			if (*s == '.') {
-				float power = 0.1;
+				float power = 0.1f;
 				s++;
 				while (chartype[*s] == 1) {
 
@@ -137,9 +138,9 @@ namespace LayoutLoader {
 				num = *s - '0' + num * 10;
 				s++;
 			}
-			number = num;
+			number = (float)num;
 			if (*s == '.') {
-				float power = 0.1;
+				float power = 0.1f;
 				s++;
 				while (chartype[*s] == 1) {
 
@@ -359,9 +360,9 @@ namespace DisplayLoader {
 				num = *s - '0' + num * 10;
 				s++;
 			}
-			number = num;
+			number = (float)num;
 			if (*s == '.') {
-				float power = 0.1;
+				float power = 0.1f;
 				s++;
 				while (chartype[*s] == 1) {
 
@@ -381,9 +382,9 @@ namespace DisplayLoader {
 				num = *s - '0' + num * 10;
 				s++;
 			}
-			number = num;
+			number = (float)num;
 			if (*s == '.') {
-				float power = 0.1;
+				float power = 0.1f;
 				s++;
 				while (chartype[*s] == 1) {
 
@@ -578,17 +579,76 @@ namespace PageLoader {
 			text,
 			input,
 			button,
+			close,
+			draggable,
+			maxmize,
+			minimize,
+			radio,
+			radioGroup,
+			checkbox,
+			swit
 		};
 
 		unordered_map<string, Key>keyMap = {
+			{"switch",Key::swit},
+			{ "checkbox",Key::checkbox },
 			{ "linear",Key::linear },
 		{ "text",Key::text },
 		{"input",Key::input},
-		{"button",Key::button}
+		{"button",Key::button},
+		{"close",Key::close},
+		{"draggable",Key::draggable},
+		{"maxmize",Key::maxmize},
+		{"minimize",Key::minimize},
+		{"radio",Key::radio},
+		{"radiogroup",Key::radioGroup}
 		};
 
 		switch (keyMap[str])
 		{
+		case Key::swit: {
+			auto e = new Switch;
+			e->name = str;
+			return e;
+		}
+		case Key::checkbox: {
+			auto e = new CheckBox;
+			e->name = str;
+			return e;
+		}
+		case Key::radioGroup: {
+			auto e = new RadioGroup;
+			e->name = str;
+			return e;
+		}
+		case Key::radio: {
+			auto e = new Radio;
+			e->name = str;
+			return e;
+		}
+		case Key::maxmize: {
+			auto e = new MaxButton;
+			e->name = str;
+			return e;
+		}
+		case Key::minimize: {
+			auto e = new MiniButton;
+			e->name = str;
+			return e;
+		}
+		case Key::draggable: {
+			auto e = new UIDragable;
+			e->name = str;
+			return e;
+		}
+
+
+		case Key::close: {
+			auto e = new CloseButton;
+			e->name = str;
+			return e;
+		}
+
 		case Key::input: {
 
 			auto e = new UIInput;
@@ -596,9 +656,6 @@ namespace PageLoader {
 			return e;
 
 		}
-			
-
-			break;
 		case Key::button: {
 			auto e = new UIButton;
 			e->name = str;
@@ -609,17 +666,13 @@ namespace PageLoader {
 			e->name = str;
 			return e;
 		}
-
-						  break;
-		case Key::table:
-			break;
+	//	case Key::table:
+	//		break;
 		case Key::text: {
 			auto e = new UIText;
 			e->name = str;
 			return e;
 		}
-
-						break;
 		default: {
 			auto e = new UIElement;
 			e->name = str;
@@ -649,10 +702,15 @@ namespace PageLoader {
 			}
 			else {
 				e->SetAttr(attr, em);
-				if (NextToken() == Token::Str) {
+				if (token == Token::Str) {
 					goto decodeNext;
 				}
-				else {
+				else if (token == Token::Div) {
+					if (NextToken() != Token::Great)
+						return  false;
+					else return true;
+				}
+				else if (token != Token::Great) {
 					return false;
 				}
 			}
@@ -660,6 +718,7 @@ namespace PageLoader {
 		else if (token == Token::Div) {
 			if (NextToken() != Token::Great)
 				return  false;
+			else return true;
 		}
 		else if (token != Token::Great) {
 			return false;
@@ -702,8 +761,8 @@ Page* LUI::LoadPage(std::string&&name) {
 
 	if (!fs)
 		return false;
-
-	char bom[] = { 239,187,191,254,255 };
+	
+	char bom[] = { (char)239,(char)187,(char)191,(char)254,(char)255 };
 
 	if (fs[0] == bom[0] && fs[1] == bom[1] && fs[2] == bom[2]) {
 		s += 3;
@@ -766,7 +825,7 @@ bool LUI::LoadLayout(std::string&&name) {
 
 	std::vector<Layout*>layouts;
 
-	char bom[] = { 239,187,191,254,255 };
+	char bom[] = { (char)239,(char)187,(char)191,(char)254,(char)255 };
 
 	if (fs[0] == bom[0] && fs[1] == bom[1] && fs[2] == bom[2]) {
 		s += 3;
@@ -1244,7 +1303,7 @@ bool LUI::LoadDisplay(std::string&&name) {
 	if (!fs)
 		return false;
 
-	char bom[] = { 239,187,191,254,255 };
+	char bom[] = { (char)239,(char)187,(char)191,(char)254,(char)255 };
 
 	if (fs[0] == bom[0] && fs[1] == bom[1] && fs[2] == bom[2]) {
 		s += 3;
@@ -1405,7 +1464,7 @@ decodeAttrs:
 		if (NextToken() == Token::Number) {
 			for (auto i : displays) {
 				SetFlag(i->flag, DisplayFlag::boxShadow);
-				i->boxShadow.size = DisplayLoader::number;
+				i->boxShadow.size = (int)DisplayLoader::number;
 			}
 		}
 		else if (DisplayLoader::token != Token::Semi) {

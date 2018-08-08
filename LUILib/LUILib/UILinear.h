@@ -5,7 +5,7 @@ namespace LUI {
 	{
 	public:
 		UILinear();
-		~UILinear();
+		virtual ~UILinear();
 
 		enum class LinearFloat
 		{
@@ -20,7 +20,7 @@ namespace LUI {
 		std::vector<float>lineHeights;
 		std::vector<int>lineBreaks;
 
-		UIElement * Copy()override;
+		UIElement * CopyData()override;
 		void FindVisible()override;
 		void OnLayout()override;
 		UIElement* SelectObject(float x, float y)override;

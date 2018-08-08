@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "UIText.h"
 #include "Window.h"
-
+#include"Page.h"
 
 using namespace std;
 using namespace LUI;
@@ -82,56 +82,21 @@ void UIText::SetAttr(string&attr, string&value) {
 
 	enum class Attr {
 		Error,
-		layout,
-		display,
-		hide,
-		focusable,
-		capturable,
-		disabled,
 		text,
-		hint
 	};
 
 	static unordered_map<string, Attr>m = {
-		{ "layout",Attr::layout },
-	{ "display",Attr::display },
-	{ "hide",Attr::hide },
-	{ "focusable",Attr::focusable },
-	{ "capturable",Attr::capturable },
-	{ "disabled",Attr::disabled },
 	{"value",Attr::text},
-	{"hint",Attr::hint}
 	};
 
 
 	switch (m[attr])
 	{
-	case Attr::layout:
-		layoutClass = value;
-		break;
-	case Attr::display:
-		displayClass = value;
-		break;
-	case Attr::hide:
-		isHidden = value != "false";
-
-		break;
-	case Attr::hint:
-		UTF8ToUnicode(value.c_str(), hint);
-		break;
-	case Attr::focusable:
-		focusable = value != "false";
-		break;
-	case Attr::capturable:
-		capturable = value != "false";
-		break;
 	case Attr::text:
 		UTF8ToUnicode(value.c_str(), text);
 		break;
-	case Attr::disabled:
-		disabled = value != "false";
-		break;
 	default:
+		__super::SetAttr(attr, value);
 		break;
 	}
 
@@ -139,32 +104,11 @@ void UIText::SetAttr(string&attr, string&value) {
 
 }
 
-UIElement* UIText::Copy() {
+UIElement* UIText::CopyData() {
 
 	auto n = new UIText;
 
-	for (auto i : child) {
-		auto e = i->Copy();
-		e->parent = n;
-		n->child.push_back(e);
-	}
-
-	needMeasure = true;
-	n->isHidden = isHidden;
-	n->layout = layout;
-	n->display = display;
-	n->layoutClass = layoutClass;
-	n->displayClass = displayClass;
-	n->name = name;
 	n->text = text;
-	n->hint = hint;
-
-	n->focusable = focusable;
-	n->capturable = capturable;
-	n->disabled = disabled;
-
-	scrollY = 0.0f;
-	scrollX = 0.0f;
 
 	return n;
 }

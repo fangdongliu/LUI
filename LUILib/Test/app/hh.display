@@ -1,14 +1,18 @@
 ﻿display{
-radius:200;
-duration:0.3;
+duration:0.5;
 background:radial(#ffffffff 0.0,#ffaabbcc 1.0,#ffffff00 1.0);
 shadow:20 #88f0f0ff;
-}
-display:hover{
 radius:200;
+transform: offset(0,0);
+}
+
+
+display:hover{
 background:radial(#ffffffff 0.0,#ffaabbcc 0.0,#ffffff00 1.0);
-duration:0.3;
+duration:10;
+radius:0;
 shadow:20 #88ffff00;
+transform: offset(600,0);
 }
 
 display:focus{
@@ -25,7 +29,15 @@ duration:0.3;
 shadow:10 #20000000;
 }
 
+display3:hover{
+background:#ffff0000;
+duration:0.3;
+shadow:10 #20000000;
+}
+
 display3{
+duration:0.3;
+opacity:1.0;
 background:#ff444444;
 
 }
@@ -44,9 +56,40 @@ background:radial(#ffffffff 0.0,#ffaabbcc 0.0,#ffffff00 1.0);
 }
 
 yellow{
+opacity:1.0;
 background:radial(#ffffff00 0.0,#ffaabbcc 1.0,#ffffff00 1.0);
 }
 
 yellow:hover{
+opacity:0.0;
 background:radial(#ffffff00 0.0,#ffaabbcc 0.0,#ffffff00 1.0);
+}
+
+purple{
+background:radial(#fff0ff00 0.0,#ff00bbcc 1.0,#fff00f0f 1.0);
+}
+
+rect{
+background:#ffffffff;
+}
+sky{
+background:radial(#ff00ff00 0.0,#ffaa00cc 1.0,#ff00ff00 1.0);
+}
+
+rect{
+duration:0.3;
+color:#ff00ffff;
+}
+
+rect:hover{
+duration:0.3;
+background:#ffffffff;
+color:#fff0f000;
+}
+
+linear{
+}
+
+node{
+background:#ffff00ff;
 }

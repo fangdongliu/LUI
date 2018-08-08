@@ -11,6 +11,22 @@
 #define REAL_EPSILON        1.192092896e-07F        /* FLT_EPSILON */
 #endif 
 namespace LUI {
+
+	class KeyEvent {
+	public:
+		KeyEvent(int vk_, bool heldShift_, bool heldControl_, bool heldAlt_) {
+			vk = vk_;
+			heldAlt = heldAlt_;
+			heldControl = heldControl_;
+			heldShift = heldShift_;
+		}
+
+		bool heldShift;
+		bool heldAlt;
+		bool heldControl;
+		int vk;
+	};
+
 	class LSizeF
 	{
 	public:

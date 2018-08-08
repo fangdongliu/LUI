@@ -46,7 +46,7 @@ namespace {
 		for (auto& i : fs::recursive_directory_iterator("app")) {
 
 			if (fs::is_regular_file(i)) {
-				int pos = i.path().string().find_last_of('.');
+				int pos = (int)i.path().string().find_last_of('.');
 				if (pos != -1) {
 					string s = i.path().string().substr(pos + 1);
 
@@ -299,7 +299,7 @@ int App::Run() {
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
-	return msg.wParam;
+	return (int)msg.wParam;
 }
 
 void App::AddWindow(Window*window) {
@@ -315,33 +315,19 @@ void App::EraseWindow(Window*window) {
 
 Page* App::GetPage(std::string pageName) {
 
-	Page* page = new Page;
-
 	auto i = pages[pageName];
 
 	if (!i) {
-		return page;
+		return nullptr;
 	}
 
-	page->root = i->root->Copy();
-	page->name = i->name;
-	page->binds = i->binds;
-
-	for (auto& e : i->dialogs) {
-		auto& s = page->dialogs[e.first];
-		s->root = e.second->root->Copy();
-		s->name = e.second->name;
-		s->binds = e.second->binds;
-	}
-
-	return page;
+	return i->Copy();
 
 }
 
 int main() {
 	try {
 		Init();
-		InitPages(app->pages);
 		for (auto& i : app->pages) {
 			app->ApplyStyle(i.second->root);
 		}
@@ -362,7 +348,6 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
 	try {
 		Init();
-		InitPages(app->pages);
 		for (auto& i : app->pages) {
 			app->ApplyStyle(i.second->root);
 		}

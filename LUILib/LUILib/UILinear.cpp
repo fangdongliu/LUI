@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "UILinear.h"
 #include"Window.h"
+#include"Page.h"
+#include<iostream>
 using namespace LUI;
 using namespace std;
 
@@ -15,32 +17,11 @@ UILinear::~UILinear()
 {
 }
 
-UIElement* UILinear::Copy() {
+UIElement* UILinear::CopyData() {
 
 	auto n = new UILinear;
 
-	for (auto i : child) {
-		auto e = i->Copy();
-		e->parent = n;
-		n->child.push_back(e);
-	}
-
-	needMeasure = true;
-	n->isHidden = isHidden;
-	n->layout = layout;
-	n->display = display;
-	n->layoutClass = layoutClass;
-	n->displayClass = displayClass;
-	n->name = name;
 	n->linearFloat = linearFloat;
-	n->hint = hint;
-
-	n->focusable = focusable;
-	n->capturable = capturable;
-	n->disabled = disabled;
-
-	scrollY = 0.0f;
-	scrollX = 0.0f;
 
 	return n;
 }
@@ -74,6 +55,8 @@ void UILinear::OnLayout() {
 
 	maxScrollX = max(contentRect.Width - rect.Width, 0);
 	maxScrollY = max(contentRect.Height - rect.Height, 0);
+	if (scrollX > maxScrollX)scrollX = maxScrollX;
+	if (scrollY > maxScrollY)scrollY = maxScrollY;
 
 }
 
@@ -114,6 +97,7 @@ void UILinear::LayoutFloatNone() {
 
 void UILinear::AlignToCenter(float maxHeight, int start, int count) {
 
+
 	for (int i = start; i > start - count; i--) {
 
 		auto ch = child[i];
@@ -140,8 +124,10 @@ void UILinear::LayoutFloatLeft() {
 
 		auto ch = child[i];
 
-		if (ch->isHidden)
+		if (ch->isHidden) {
 			continue;
+			objCount++;
+		}
 
 		if (ch->needMeasure)
 			ch->OnMeasure(rect.Width, rect.Height);
@@ -205,10 +191,11 @@ void UILinear::LayoutFloatLeft() {
 
 	}
 
-	AlignToCenter(maxHeightInline, child.size() - 1, objCount);
-	lineBreaks.push_back(child.size() - 1);
+	AlignToCenter(maxHeightInline, (int)child.size() - 1, objCount);
+	lineBreaks.push_back((int)child.size() - 1);
 	lineHeights.push_back(lineHeights.back() + maxHeightInline);
 	contentRect.Width = max(contentRect.Width, currentInlineWidth);
+	contentRect.Height = lineHeights.back();
 }
 
 void UILinear::LayoutFloatRight() {
@@ -226,9 +213,10 @@ void UILinear::LayoutFloatRight() {
 
 		auto ch = child[i];
 
-		if (ch->isHidden)
+		if (ch->isHidden) {
+			objCount++;
 			continue;
-
+		}
 		if (ch->needMeasure)
 			ch->OnMeasure(rect.Width, rect.Height);
 
@@ -270,6 +258,7 @@ void UILinear::LayoutFloatRight() {
 					lineHeights.push_back(lineHeights.back() + maxHeightInline);
 					objCount = 0;
 					lineBreaks.push_back(i - 1);
+					contentRect.X = min(contentRect.X, rect.Width - currentInlineWidth);
 				}
 				currentInlineWidth = 0.0f;
 				maxHeightInline = 0.0f;
@@ -289,9 +278,19 @@ void UILinear::LayoutFloatRight() {
 
 	}
 
-	AlignToCenter(maxHeightInline, child.size() - 1, objCount);
-	lineBreaks.push_back(child.size() - 1);
+	AlignToCenter(maxHeightInline, (int)child.size() - 1, objCount);
+	contentRect.X = min(contentRect.X, rect.Width - currentInlineWidth);
+	lineBreaks.push_back((int)child.size() - 1);
 	lineHeights.push_back(lineHeights.back() + maxHeightInline);
+	contentRect.Height = lineHeights.back();
+	contentRect.Width = rect.Width - contentRect.X;
+	contentRect.X = 0;
+
+	if (layout.widthWrapContent) {
+		for (auto i : child) {
+			i->relativePos.X -= rect.Width-contentRect.Width;
+		}
+	}
 
 }
 
@@ -300,7 +299,7 @@ void UILinear::FindVisible() {
 	needFindVisible = false;
 
 	first = 0;
-	last = child.size();
+	last = (int)child.size();
 
 	if (child.size() == 0)
 		return;
@@ -311,7 +310,7 @@ void UILinear::FindVisible() {
 
 		if (scrollY != 0.0f) {
 
-			lowerY = std::lower_bound(lineHeights.data(), lineHeights.data() + lineHeights.size(), scrollY-10) - lineHeights.data();
+			lowerY = (int)(std::lower_bound(lineHeights.data(), lineHeights.data() + lineHeights.size(), scrollY-10) - lineHeights.data());
 
 			if (lowerY == lineHeights.size())
 				return;
@@ -344,6 +343,7 @@ void UILinear::FindVisible() {
 			if (ch->isHidden)
 				continue;
 
+			ch->needFindVisible = true;
 			ch->rect.X = ch->relativePos.X - scrollX + rect.X;
 			ch->rect.Y = ch->relativePos.Y - scrollY + rect.Y;
 
@@ -363,7 +363,7 @@ UIElement* UILinear::SelectObject(float x, float y) {
 
 		r.Width += padding.left + padding.right;
 		r.Height += padding.top + padding.bottom;
-		if (r.Contains(x, y)) {
+		if (r.Contains(x, y) && !child[i]->isHidden&&child[i]->display.opacity!=0.0f&&!child[i]->disabled) {
 			return child[i];
 		}
 	}
@@ -375,38 +375,16 @@ void UILinear::SetAttr(std::string&attr, std::string&value) {
 
 	enum class Attr {
 		Error,
-		layout,
-		display,
-		hide,
-		focusable,
-		capturable,
-		disabled,
-		id,
-		hint,
 		flo,
 	};
 
-	static unordered_map<string, Attr>m = {
-		{ "layout",Attr::layout },
-	{ "display",Attr::display },
-	{ "hide",Attr::hide },
-	{ "focusable",Attr::focusable },
-	{ "capturable",Attr::capturable },
-	{ "disabled",Attr::disabled },
-	{ "id",Attr::id },
+	static map<string, Attr>m = {
 	{"float",Attr::flo},
-	{ "hint",Attr::hint }
 	};
 
 
 	switch (m[attr])
 	{
-	case Attr::layout:
-		layoutClass = value;
-		break;
-	case Attr::display:
-		displayClass = value;
-		break;
 	case Attr::flo:
 		if (value == "left") {
 			linearFloat = LinearFloat::Left;
@@ -416,25 +394,9 @@ void UILinear::SetAttr(std::string&attr, std::string&value) {
 		}
 		else linearFloat = LinearFloat::None;
 		break;
-	case Attr::hide:
-		isHidden = value != "false";
-		break;
-	case Attr::focusable:
-		focusable = value != "false";
-		break;
-	case Attr::capturable:
-		capturable = value != "false";
-		break;
-	case Attr::disabled:
-		disabled = value != "false";
-		break;
-	case Attr::id:
-		id = value;
-		break;
-	case Attr::hint:
-		UTF8ToUnicode(value.c_str(), hint);
-		break;
+	
 	default:
+		__super::SetAttr(attr, value);
 		break;
 	}
 

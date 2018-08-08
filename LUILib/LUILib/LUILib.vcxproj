@@ -149,7 +149,6 @@
   <ItemGroup>
     <ClInclude Include="Animation.h" />
     <ClInclude Include="App.h" />
-    <ClInclude Include="Dealer.h" />
     <ClInclude Include="LUITypes.h" />
     <ClInclude Include="Page.h" />
     <ClInclude Include="Painter.h" />
@@ -159,6 +158,7 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="UIButton.h" />
+    <ClInclude Include="UIDragable.h" />
     <ClInclude Include="UIElement.h" />
     <ClInclude Include="UIInput.h" />
     <ClInclude Include="UILinear.h" />
@@ -168,7 +168,6 @@
   <ItemGroup>
     <ClCompile Include="Animation.cpp" />
     <ClCompile Include="App.cpp" />
-    <ClCompile Include="Dealer.cpp" />
     <ClCompile Include="Page.cpp" />
     <ClCompile Include="Painter.cpp" />
     <ClCompile Include="ResourceLoader.cpp" />
@@ -181,6 +180,7 @@
     <ClCompile Include="Style.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="UIButton.cpp" />
+    <ClCompile Include="UIDragable.cpp" />
     <ClCompile Include="UIElement.cpp" />
     <ClCompile Include="UIInput.cpp" />
     <ClCompile Include="UILinear.cpp" />

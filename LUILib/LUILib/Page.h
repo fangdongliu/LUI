@@ -9,12 +9,13 @@ namespace LUI {
 	public:
 		UIElement * root;
 		std::string name;
-		std::unordered_map<std::string, Page*>dialogs;
+		std::unordered_map<std::string, UIElement*>ids;
 		std::vector<std::pair<std::string, std::pair<std::string,std::string>>>binds;
 
 		Page();
-		Page(Page& other);
 		~Page();
+
+		Page* Copy();
 	};
 
 }

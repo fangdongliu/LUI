@@ -4,10 +4,12 @@
 #include <vector>
 #include"LUITypes.h"
 #include"Animation.h"
+#include<map>
 namespace LUI {
 
 	class Window;
 	class Painter;
+	class Page;
 
 	class UIElement
 	{
@@ -16,11 +18,15 @@ namespace LUI {
 		virtual ~UIElement();
 
 		UIElement *parent;
+		UIElement*next;
+		UIElement*before;
 		std::vector<UIElement*>child;
-
+	
+	protected:
+		virtual UIElement* CopyData();
 	public:
-
-		virtual UIElement * Copy();
+		UIElement * Copy(Page*);
+	
 		Animation anim;
 		LRectF rect;
 		LPointF relativePos;
@@ -52,6 +58,9 @@ namespace LUI {
 		float maxScrollX;
 		float maxScrollY;
 
+		std::string onchar;
+		std::string onkey;
+		std::string onclick;
 		std::wstring hint;
 		std::string name;
 		std::string id;
@@ -66,13 +75,14 @@ namespace LUI {
 
 
 	public:
-		virtual bool OnChar(wchar_t) { return false; }
-		virtual bool OnKey(UINT32) { return false; }
-		virtual void OnHover(float x,float y) {};
-		virtual bool OnMouseMove(float x, float y) { return false; };
-		virtual bool OnLButtonDown(float x, float y) { return false; };
-		virtual bool OnClick(float x, float y) { return false; };
-		virtual bool OnRightClick(float x, float y) { return false; };
+		virtual bool OnChar(wchar_t, Window*) { return false; }
+		virtual bool OnKey(KeyEvent&, Window*) { return false; }
+		virtual void OnHover(float x,float y,Window*) {};
+		virtual bool OnMouseMove(float x, float y, Window*) { return false; };
+		virtual bool OnLButtonDown(float x, float y, Window*) { return false; };
+		virtual bool OnClick(float x, float y, Window*) { return false; };
+		virtual bool OnDoubleClick(float x, float y, Window*) { return false; };
+		virtual bool OnRightClick(float x, float y, Window*) { return false; };
 		virtual bool OnPaint(Painter*) { return false; }
 		virtual void OnLayout();
 		virtual void FindVisible();

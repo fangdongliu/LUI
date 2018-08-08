@@ -3,6 +3,7 @@
 #include"UIText.h"
 #include"Painter.h"
 #include<iostream>
+#include"Page.h"
 
 #include"Timer.h"
 using namespace LUI;
@@ -116,8 +117,14 @@ void UIInput::PasteFromClipboard()
 					text,
 					characterCount
 				);
+				for (UINT32 i = 0; i < characterCount; i++) {
+					auto&c = value[i + caretPosition];
+					if (!(c >= 0x20 || c == 9))
+						c = ' ';
+				}
+
 				GlobalUnlock(hClipboardData);
-				
+
 			}
 		}
 		CloseClipboard();
@@ -145,7 +152,7 @@ void UIInput::Select(SelectMode mode, bool moveAnchor, int pos) {
 		caretPosition = value.length();
 		break;
 	case LUI::SelectMode::lastChar:
-		if (caretPosition < pos)
+		if (caretPosition < (UINT32)pos)
 			caretPosition = 0;
 		else caretPosition -= pos;
 		break;
@@ -188,7 +195,7 @@ void UIInput::Select(SelectMode mode, bool moveAnchor, int pos) {
 			for (UINT32 cluster = 0; cluster < clusterCount; ++cluster) {
 				UINT32 clusterLength = clusterMetrics[cluster].length;
 
-				if (clusterPosition+clusterMetrics[cluster].length > oldCaretPosition && clusterMetrics[cluster].canWrapLineAfter) {
+				if (clusterPosition + clusterMetrics[cluster].length > oldCaretPosition && clusterMetrics[cluster].canWrapLineAfter) {
 					caretPosition = clusterPosition + clusterMetrics[cluster].length;
 					break;
 
@@ -199,7 +206,7 @@ void UIInput::Select(SelectMode mode, bool moveAnchor, int pos) {
 		}
 		break;
 	}
-	case LUI::SelectMode::absoluteLeading:{
+	case LUI::SelectMode::absoluteLeading: {
 		DWRITE_HIT_TEST_METRICS hitTestMetrics;
 		float caretX, caretY;
 
@@ -244,20 +251,19 @@ void UIInput::Select(SelectMode mode, bool moveAnchor, int pos) {
 	if (moveAnchor)
 		caretAnchor = caretPosition;
 
-		// update the caret formatting attributes
+	// update the caret formatting attributes
 }
 
 void UIInput::DeleteSelection() {
 
-	DWRITE_TEXT_RANGE range=GetSelectionRange();
+	DWRITE_TEXT_RANGE range = GetSelectionRange();
 
 	if (range.length <= 0)
 		return;
 
-	cout << range.startPosition <<' '<<range.length<<endl;
 
 	value.erase(range.startPosition, range.length);
-	
+
 	caretPosition = range.startPosition;
 	caretAnchor = caretPosition;
 
@@ -284,12 +290,11 @@ DWRITE_TEXT_RANGE UIInput::GetSelectionRange() {
 
 }
 
-bool UIInput::OnKey(UINT32 keyCode) {
+bool UIInput::OnKey(KeyEvent& keyEvent, Window*) {
 
-	bool heldShift = (GetKeyState(VK_SHIFT) & 0x80) != 0;
-	bool heldControl = (GetKeyState(VK_CONTROL) & 0x80) != 0;
 
-	switch (keyCode)
+
+	switch (keyEvent.vk)
 	{
 	case VK_BACK:
 		if (caretPosition != caretAnchor)
@@ -315,9 +320,9 @@ bool UIInput::OnKey(UINT32 keyCode) {
 			caretAnchor = caretPosition;
 
 			value.erase(caretPosition, count);
-			
+
 			NeedMeasure();
-			
+
 		}
 		break;
 	case VK_DELETE:
@@ -345,7 +350,7 @@ bool UIInput::OnKey(UINT32 keyCode) {
 		break;
 	case VK_LEFT:
 
-		if (!heldControl)
+		if (!keyEvent.heldControl)
 		{
 			if (caretPosition > 0) {
 				UINT32 count = 1;
@@ -361,19 +366,19 @@ bool UIInput::OnKey(UINT32 keyCode) {
 					}
 				}
 
-				Select(SelectMode::lastChar, !heldShift, count);
+				Select(SelectMode::lastChar, !keyEvent.heldShift, count);
 
 				NeedMeasure();
 			}
 		}
-		else Select(SelectMode::lastWord, !heldShift,1);
+		else Select(SelectMode::lastWord, !keyEvent.heldShift, 1);
 		break;
 
-	case VK_RIGHT: 
+	case VK_RIGHT:
 
 
 
-		if (!heldControl)
+		if (!keyEvent.heldControl)
 		{
 			if (caretPosition < value.length()) {
 				UINT32 count = 1;
@@ -389,13 +394,13 @@ bool UIInput::OnKey(UINT32 keyCode) {
 					}
 				}
 
-				Select(SelectMode::nextChar, !heldShift, count);
+				Select(SelectMode::nextChar, !keyEvent.heldShift, count);
 
 				NeedMeasure();
 			}
 		}
 		else
-			Select(SelectMode::nextWord, !heldShift, 1);
+			Select(SelectMode::nextWord, !keyEvent.heldShift, 1);
 		break;
 	case VK_UP:
 	case VK_HOME:
@@ -406,27 +411,27 @@ bool UIInput::OnKey(UINT32 keyCode) {
 		Select(SelectMode::tile);
 		break;
 	case 'C':
-		if (heldControl)
+		if (keyEvent.heldControl)
 			CopyToClipboard();
 		break;
 	case VK_INSERT:
-		if (heldControl)
+		if (keyEvent.heldControl)
 			CopyToClipboard();
-		else if (heldShift)
+		else if (keyEvent.heldShift)
 			PasteFromClipboard();
 		break;
 	case 'V':
-		if (heldControl)
+		if (keyEvent.heldControl)
 			PasteFromClipboard();
 		break;
 	case 'X':
-		if (heldControl) {
+		if (keyEvent.heldControl) {
 			CopyToClipboard();
 			DeleteSelection();
 		}
 		break;
 	case 'A':
-		if (heldControl)
+		if (keyEvent.heldControl)
 			Select(SelectMode::all);
 		break;
 	default:
@@ -437,15 +442,11 @@ bool UIInput::OnKey(UINT32 keyCode) {
 
 }
 
-
-bool UIInput::OnChar(wchar_t c) {
-
-	
+bool UIInput::OnChar(wchar_t c, Window*) {
 
 	if (c >= 0x20 || c == 9)
 	{
 		// Replace any existing selection.
-		cout << c << endl;
 
 		DeleteSelection();
 
@@ -470,7 +471,7 @@ bool UIInput::OnChar(wchar_t c) {
 
 		caretPosition += charsLength;
 		caretAnchor = caretPosition;
-		
+
 		NeedMeasure();
 
 		return true;
@@ -518,6 +519,8 @@ void UIInput::OnLayout() {
 
 		maxScrollX = max(contentRect.Width - rect.Width, 0);
 		maxScrollY = max(contentRect.Height - rect.Height, 0);
+		if (scrollX > maxScrollX)scrollX = maxScrollX;
+		if (scrollY > maxScrollY)scrollY = maxScrollY;
 
 	}
 
@@ -538,18 +541,17 @@ void UIInput::OnLayout() {
 
 bool UIInput::OnPaint(Painter*painter) {
 	if (textLayout) {
-		float offsetX=0;
-		float offsetY=0;
+		float offsetX = 0;
+		float offsetY = 0;
 		if (isFocus) {
 			auto range = GetSelectionRange();
-			cout << range.startPosition << range.length<<endl;
 			UINT32 actualHitTestCount = 0;
 			if (range.length > 0) {
 				textLayout->HitTestTextRange(range.startPosition, range.length, 0, 0, 0, 0, &actualHitTestCount);
 				std::vector<DWRITE_HIT_TEST_METRICS>hitTestMetrics(actualHitTestCount);
-				textLayout->HitTestTextRange(range.startPosition, range.length, rect.X-scrollX, rect.Y, &hitTestMetrics[0], static_cast<UINT32>(hitTestMetrics.size()), &actualHitTestCount);
+				textLayout->HitTestTextRange(range.startPosition, range.length, rect.X - scrollX, rect.Y, &hitTestMetrics[0], static_cast<UINT32>(hitTestMetrics.size()), &actualHitTestCount);
 				painter->brush->SetColor(D2D1::ColorF(D2D1::ColorF::LightSkyBlue));
-				for (int i = 0; i < actualHitTestCount; i++) {
+				for (UINT32 i = 0; i < actualHitTestCount; i++) {
 					const DWRITE_HIT_TEST_METRICS& htm = hitTestMetrics[i];
 					D2D1_RECT_F highlightRect = {
 						htm.left,
@@ -563,36 +565,36 @@ bool UIInput::OnPaint(Painter*painter) {
 
 			DWRITE_HIT_TEST_METRICS caretMetrics;
 			float caretX, caretY;
-			textLayout->HitTestTextPosition(caretPosition,  false , &caretX, &caretY, &caretMetrics);
+			textLayout->HitTestTextPosition(caretPosition, false, &caretX, &caretY, &caretMetrics);
 			if (caretX - scrollX > rect.Width) {
 				scrollX = caretX - rect.Width;
 			}
 			else if (caretX - scrollX < 0) {
 				scrollX = caretX;
 			}
-			
+
 			if (sin((globalTimer.TotalTime() - globalTimer.mLastEventTime)*6.28f) > -0.1) {
 				if (caretPosition > caretAnchor) {
 					painter->brush->SetColor(D2D1::ColorF(D2D1::ColorF::Black));
-					painter->target->DrawLine(D2D1::Point2F(caretX + rect.X - scrollX , caretY+rect.Y)
-						, D2D1::Point2F(caretX+rect.X -scrollX, caretY+caretMetrics.height+rect.Y), painter->brush);
+					painter->target->DrawLine(D2D1::Point2F(caretX + rect.X - scrollX, caretY + rect.Y)
+						, D2D1::Point2F(caretX + rect.X - scrollX, caretY + caretMetrics.height + rect.Y), painter->brush);
 				}
 				else {
 					painter->brush->SetColor(D2D1::ColorF(D2D1::ColorF::Black));
-					painter->target->DrawLine(D2D1::Point2F(caretX + rect.X - scrollX , caretY+rect.Y)
-						, D2D1::Point2F(caretX + rect.X - scrollX, caretY + caretMetrics.height+rect.Y), painter->brush);
+					painter->target->DrawLine(D2D1::Point2F(caretX + rect.X - scrollX, caretY + rect.Y)
+						, D2D1::Point2F(caretX + rect.X - scrollX, caretY + caretMetrics.height + rect.Y), painter->brush);
 
 				}
 			}
 		}
 
-		if (value.length() == 0&&placeLayout) {
-			painter->brush->SetColor(D2D1::ColorF(display.color.r, display.color.g, display.color.b, display.color.a*0.6));
+		if (value.length() == 0 && placeLayout) {
+			painter->brush->SetColor(D2D1::ColorF(display.color.r, display.color.g, display.color.b, display.color.a*0.6f));
 			painter->target->DrawTextLayout(D2D1::Point2F(rect.X, rect.Y), placeLayout, painter->brush);
 		}
 
 		painter->brush->SetColor(display.color);
-		painter->target->DrawTextLayout(D2D1::Point2F(rect.X-scrollX, rect.Y), textLayout, painter->brush);
+		painter->target->DrawTextLayout(D2D1::Point2F(rect.X - scrollX, rect.Y), textLayout, painter->brush);
 	}
 	return false;
 
@@ -602,27 +604,15 @@ void UIInput::SetAttr(string&attr, string&value) {
 
 	enum class Attr {
 		Error,
-		layout,
-		display,
-		hide,
-		focusable,
-		capturable,
-		disabled,
 		text,
 		placeHolder,
-		hint
+		onchar,
 	};
 
 	static unordered_map<string, Attr>m = {
-		{ "layout",Attr::layout },
-	{ "display",Attr::display },
-	{ "hide",Attr::hide },
-	{ "focusable",Attr::focusable },
-	{ "capturable",Attr::capturable },
-	{ "disabled",Attr::disabled },
 	{ "value",Attr::text },
-	{ "hint",Attr::hint },
-	{"placeHolder",Attr::placeHolder}
+	{"placeHolder",Attr::placeHolder},
+	{"onchar",Attr::onchar}
 	};
 
 
@@ -631,32 +621,11 @@ void UIInput::SetAttr(string&attr, string&value) {
 	case Attr::placeHolder:
 		UTF8ToUnicode(value.c_str(), placeHolder);
 		break;
-	case Attr::layout:
-		layoutClass = value;
-		break;
-	case Attr::display:
-		displayClass = value;
-		break;
-	case Attr::hide:
-		isHidden = value != "false";
-
-		break;
-	case Attr::hint:
-		UTF8ToUnicode(value.c_str(), hint);
-		break;
-	case Attr::focusable:
-		focusable = value != "false";
-		break;
-	case Attr::capturable:
-		capturable = value != "false";
-		break;
 	case Attr::text:
 		UTF8ToUnicode(value.c_str(), this->value);
 		break;
-	case Attr::disabled:
-		disabled = value != "false";
-		break;
 	default:
+		__super::SetAttr(attr, value);
 		break;
 	}
 
@@ -664,45 +633,23 @@ void UIInput::SetAttr(string&attr, string&value) {
 
 }
 
-UIElement* UIInput::Copy() {
+UIElement* UIInput::CopyData() {
 
 	auto n = new UIInput;
 
-	for (auto i : child) {
-		auto e = i->Copy();
-		e->parent = n;
-		n->child.push_back(e);
-	}
-
-	needMeasure = true;
-	n->isHidden = isHidden;
-	n->layout = layout;
-	n->display = display;
-	n->layoutClass = layoutClass;
-	n->displayClass = displayClass;
-	n->name = name;
 	n->value = value;
-	n->hint = hint;
 	n->placeHolder = placeHolder;
-
-	n->focusable = focusable;
-	n->capturable = capturable;
-	n->disabled = disabled;
-
-	scrollY = 0.0f;
-	scrollX = 0.0f;
 
 	return n;
 }
 
 
-bool UIInput::OnMouseMove(float x, float y) {
+bool UIInput::OnMouseMove(float x, float y, Window*) {
 
 	if (isCapture) {
 
-		cout << x <<' '<< y<<endl;
 
-		SetSelectionFromPoint(x + scrollX, y , false);
+		SetSelectionFromPoint(x + scrollX, y, false);
 
 		return true;
 
@@ -712,7 +659,7 @@ bool UIInput::OnMouseMove(float x, float y) {
 
 }
 
-bool UIInput::OnLButtonDown(float x, float y) {
+bool UIInput::OnLButtonDown(float x, float y, Window*) {
 
 	SetSelectionFromPoint(x + scrollX, y, (GetKeyState(VK_SHIFT) & 0x80) == 0);
 
@@ -727,8 +674,8 @@ void UIInput::SetSelectionFromPoint(float x, float y, bool moveAnchor) {
 
 
 	textLayout->HitTestPoint(
-		x-rect.X,
-		y-rect.Y,
+		x - rect.X,
+		y - rect.Y,
 		&isTrailingHit,
 		&isInside,
 		&caretMetrics
@@ -745,5 +692,13 @@ void UIInput::SetSelectionFromPoint(float x, float y, bool moveAnchor) {
 		caretAnchor = caretPosition;
 
 	return;
+
+}
+
+bool UIInput::OnDoubleClick(float x, float y, Window*) {
+
+	Select(SelectMode::all);
+
+	return true;
 
 }

@@ -10,12 +10,20 @@ Page::Page()
 	root = nullptr;
 }
 
-Page::Page(Page& other) {
-	root = new UIElement(*other.root);
-
-}
 
 
 Page::~Page()
 {
+}
+
+
+Page* Page::Copy() {
+
+	Page *page = new Page;
+
+	page->root = root->Copy(page);
+	page->name = name;
+	page->binds = binds;
+
+	return page;
 }

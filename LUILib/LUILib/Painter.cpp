@@ -62,8 +62,6 @@ HRESULT Painter::CreateDeviceResource(Window*window) {
 	hr = factory->CreateHwndRenderTarget(D2D1::RenderTargetProperties(),
 		D2D1::HwndRenderTargetProperties(window->GetHWnd(), size), &target);
 
-	auto i = GetDpiForWindow(window->GetHWnd());
-	target->SetDpi((float)i, (float)i);
 
 	if (FAILED(hr))
 		return hr;
@@ -113,7 +111,7 @@ bool Painter::PaintHint(IDWriteTextLayout*text, float delta,D2D1_POINT_2F &hintP
 	}
 	else alpha = 1.0f;
 
-
+	
 
 	DWRITE_TEXT_METRICS metrics;
 
@@ -133,19 +131,22 @@ bool Painter::PaintHint(IDWriteTextLayout*text, float delta,D2D1_POINT_2F &hintP
 	}
 
 	
-	brush->SetColor(ColorF(0xf0f0f0,alpha));
 
 	auto rc = D2D1::RectF(hintPos.x, hintPos.y, hintPos.x + metrics.width, hintPos.y + metrics.height);
 
+
+
+
+	brush->SetColor(ColorF(0xf0f0f0,alpha));
+
 	target->FillRectangle(rc, brush);
 
-
-	brush->SetColor(ColorF(0, 0, 0, 0.3*alpha));
+	brush->SetColor(ColorF(0x333333, 0.3f*alpha));
 
 	target->DrawRectangle(rc, brush);
 
 
-	brush->SetColor(ColorF(0, 0, 0, alpha));
+	brush->SetColor(ColorF(0, alpha));
 
 	target->DrawTextLayout(D2D1::Point2F(hintPos.x+5,hintPos.y+2), text, brush);
 
@@ -161,10 +162,6 @@ ID2D1Bitmap* Painter::GetImage(std::string&name) {
 bool Painter::Paint(UIElement*e) {
 
 	bool b = false;
-
-	
-
-
 
 	if (e->anim.animInt.size() || e->anim.animFloat.size()) {
 		e->anim.Update(globalTimer.TotalTime());
@@ -193,18 +190,17 @@ bool Painter::Paint(UIElement*e) {
 			Matrix3x2F::Translation(transform.transform));
 	}
 
-	
+	PaintShadow(e);
 
 	PaintBackground(e);
 
 	if (e->display.opacity == 1.0) {
 
-		target->PushAxisAlignedClip(D2D1::RectF(e->rect.X, e->rect.Y, e->rect.X + e->rect.Width, e->rect.Y + e->rect.Height), D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+		target->PushAxisAlignedClip(D2D1::RectF(e->rect.X-e->padding.left, e->rect.Y-e->padding.top, e->rect.X + e->rect.Width+e->padding.right, e->rect.Y + e->rect.Height+e->padding.bottom), D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
 	}
 	else {
 
-
-		PushLayer(D2D1::LayerParameters(D2D1::RectF(e->rect.X, e->rect.Y, e->rect.X + e->rect.Width, e->rect.Y + e->rect.Height), 0, D2D1_ANTIALIAS_MODE_PER_PRIMITIVE,
+		PushLayer(D2D1::LayerParameters(D2D1::RectF(e->rect.X - e->padding.left, e->rect.Y - e->padding.top, e->rect.X + e->rect.Width + e->padding.right, e->rect.Y + e->rect.Height + e->padding.bottom), 0, D2D1_ANTIALIAS_MODE_PER_PRIMITIVE,
 			Matrix3x2F::Identity(), e->display.opacity));
 	}
 	
@@ -212,7 +208,6 @@ bool Painter::Paint(UIElement*e) {
 
 
 	b|=e->OnPaint(this);
-
 
 
 	if (e->needFindVisible)
@@ -223,12 +218,15 @@ bool Painter::Paint(UIElement*e) {
 			b |= Paint(e->child[i]);
 	}
 
+	PaintScroll(e);
+
+
 	if (e->display.opacity == 1.0) {
 		target->PopAxisAlignedClip();
 	}
 	else PopLayer();
 
-	PaintShadow(e);
+	
 
 	PaintBorder(e);
 
@@ -375,7 +373,7 @@ void Painter::PaintBorder(UIElement*e) {
 
 	brush->SetColor(e->display.border.color);
 	auto offset = e->display.border.size / 2;
-	auto rectangle = D2D1::RectF(e->rect.X - offset, e->rect.Y - offset, e->rect.X + e->rect.Width + offset, e->rect.Y + e->rect.Height + offset);
+	auto rectangle = D2D1::RectF(e->rect.X - e->padding.left - offset, e->rect.Y -e->padding.top - offset, e->rect.X + e->rect.Width+ e->padding.right + offset, e->rect.Y + e->padding.bottom + e->rect.Height + offset);
 	switch (e->display.border.type)
 	{
 	case BorderType::All:
@@ -413,9 +411,9 @@ void Painter::PaintShadow(UIElement*e) {
 
 	float a = color.a;
 
-	float offset = 0.5;
+	float offset = 0.5f;
 
-	auto rectangle = D2D1::RectF(e->rect.X, e->rect.Y, e->rect.X + e->rect.Width, e->rect.Y + e->rect.Height);
+	auto rectangle = D2D1::RectF(e->rect.X-e->padding.left-1.5f, e->rect.Y-e->padding.right-1.5f, e->rect.X + e->rect.Width+e->padding.right+1.5f, e->rect.Y + e->rect.Height+e->padding.bottom+1.5f);
 	switch (e->display.boxShadow.type)
 	{
 	case BorderType::All:
@@ -455,16 +453,53 @@ void Painter::PaintShadow(UIElement*e) {
 		}
 		break;
 	case BorderType::Left:
-		target->DrawLine(D2D1::Point2F(rectangle.left, rectangle.top + offset), D2D1::Point2F(rectangle.left, rectangle.bottom - offset), brush, e->display.border.size);
+		for (int i = e->display.boxShadow.size; i > 0; i--) {
+			color.a = a * (i) / e->display.boxShadow.size / 3;
+
+
+			brush->SetColor(color);
+
+			target->DrawLine(D2D1::Point2F(rectangle.left, rectangle.top), D2D1::Point2F(rectangle.left, rectangle.bottom), brush, 3);
+
+
+			rectangle.left -= 1;
+		}
 		break;
 	case BorderType::Right:
-		target->DrawLine(D2D1::Point2F(rectangle.right, rectangle.top + offset), D2D1::Point2F(rectangle.right, rectangle.bottom - offset), brush, e->display.border.size);
+		for (int i = e->display.boxShadow.size; i > 0; i--) {
+			color.a = a * (i) / e->display.boxShadow.size / 3;
+
+			brush->SetColor(color);
+
+			target->DrawLine(D2D1::Point2F(rectangle.right, rectangle.top), D2D1::Point2F(rectangle.right, rectangle.bottom), brush, 3);
+
+
+			rectangle.right += 1;
+		}
 		break;
 	case BorderType::Bottom:
-		target->DrawLine(D2D1::Point2F(rectangle.left + offset, rectangle.bottom), D2D1::Point2F(rectangle.right - offset, rectangle.bottom), brush, e->display.border.size);
+		for (int i = e->display.boxShadow.size; i > 0; i--) {
+			color.a = a * (i) / e->display.boxShadow.size / 3;
+
+			brush->SetColor(color);
+
+			target->DrawLine(D2D1::Point2F(rectangle.left, rectangle.bottom), D2D1::Point2F(rectangle.right, rectangle.bottom), brush, 3);
+
+			offset += 0.5;
+
+			rectangle.bottom += 1;
+		}
 		break;
 	case BorderType::Top:
-		target->DrawLine(D2D1::Point2F(rectangle.left + offset, rectangle.top), D2D1::Point2F(rectangle.right - offset, rectangle.top), brush, e->display.border.size);
+		for (int i = e->display.boxShadow.size; i > 0; i--) {
+			color.a = a * (i) / e->display.boxShadow.size / 3;
+
+			brush->SetColor(color);
+
+			target->DrawLine(D2D1::Point2F(rectangle.left, rectangle.top), D2D1::Point2F(rectangle.right, rectangle.top), brush, 3);
+
+			rectangle.top -= 1;
+		}
 		break;
 
 	default:
@@ -558,5 +593,47 @@ void Painter::MakeAnim(UIElement* e, Display&other) {
 	else {
 		e->display = other;
 	}
+
+}
+
+void Painter::PaintScroll(UIElement*e) {
+
+	if (e->maxScrollX>0.001f) {
+
+		auto width = e->rect.Width + e->padding.left + e->padding.right;
+
+		float blockHeight = width * width / (width + e->maxScrollX);
+		
+		if (blockHeight < 20.f)
+			blockHeight = 20.f;
+
+		float posx = (width - blockHeight) * e->scrollX / e->maxScrollX +e->rect.X - e->padding.left;
+		float posy = e->rect.GetBottom() + e->padding.bottom - 10;
+
+		brush->SetColor(ColorF(0x444444));
+
+		target->FillRoundedRectangle(RoundedRect(D2D1::RectF(posx, posy, posx+blockHeight,posy+10),3,3),brush);
+
+	}
+	if (e->maxScrollY > 0.001f) {
+
+		auto height = e->rect.Height + e->padding.top + e->padding.bottom;
+
+		float blockHeight = height * height / (height + e->maxScrollY);
+
+		if (blockHeight < 20.f)
+			blockHeight = 20.f;
+
+		float posx = e->rect.GetRight() + e->padding.right - 10;
+		float posy = (height - blockHeight) * e->scrollY / e->maxScrollY + e->rect.Y - e->padding.top;
+
+
+		brush->SetColor(ColorF(0x444444));
+
+		target->FillRoundedRectangle(RoundedRect(D2D1::RectF(posx, posy, posx+10, posy+blockHeight), 3, 3), brush);
+
+	}
+
+
 
 }

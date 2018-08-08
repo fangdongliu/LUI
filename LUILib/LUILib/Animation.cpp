@@ -26,7 +26,7 @@ void Animation::Update(float cur) {
 
 
 	for (auto i : animInt)
-		i->dest = (i->end - i->start)*percent + i->start;
+		i->dest =(int)((i->end - i->start)*percent + i->start);
 
 
 }

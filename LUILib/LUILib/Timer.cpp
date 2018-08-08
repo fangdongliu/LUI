@@ -15,11 +15,11 @@ Timer::Timer() :mBaseTime(0), mStopped(false), mStopTime(0), mPausedTime(0), mDe
 }
 float Timer::TotalTime()const {
 	if (mStopped)
-		return (mStopTime - mBaseTime - mPausedTime)*mSecondsPerCount;
-	return (mCurrTime - mBaseTime - mPausedTime)*mSecondsPerCount;
+		return (float)((mStopTime - mBaseTime - mPausedTime)*mSecondsPerCount);
+	return (float)((mCurrTime - mBaseTime - mPausedTime)*mSecondsPerCount);
 }
 float Timer::DeltaTime()const {
-	return mDeltaTime;
+	return (float)mDeltaTime;
 }
 void Timer::Reset() {
 	__int64 mNow;

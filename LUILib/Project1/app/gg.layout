@@ -51,4 +51,37 @@ input{
 width:(-10,1);
 height:(0,1) wrap;
 padding:5 5 5 5;
+margin:0 0 20 0;
+}
+
+minimize,close,maxmize{
+width:20;
+height:20;
+padding:5 10 5 10;
+}
+
+draggable{
+width : (0,1);
+height : (0,1);
+}
+
+radio{
+width:(0,1) wrap;
+height:(0,1) wrap;
+padding:10 0 10 0;
+}
+
+radiogroup{
+width:(0,1) wrap;
+height:(0,1) wrap;
+}
+
+checkbox{
+width:(0,1) wrap;
+height:(0,1) wrap;
+}
+
+switch{
+width:(0,1) wrap;
+height:(0,1) wrap;
 }

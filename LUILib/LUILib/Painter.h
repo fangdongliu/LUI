@@ -24,6 +24,7 @@ namespace LUI {
 		ID2D1SolidColorBrush * brush;
 		ID2D1BitmapBrush * bmpBrush;
 		LRectF rect;
+		Window*window;
 		bool Paint(UIElement*);
 		bool PaintHint(IDWriteTextLayout*, float,D2D1_POINT_2F&);
 	private:
@@ -32,7 +33,7 @@ namespace LUI {
 		ID2D1Layer * layers[100];
 		std::unordered_map<std::string, ID2D1Bitmap*>images;
 
-		
+		void PaintScroll(UIElement*);
 		void PaintBackground(UIElement*);
 		void PaintBorder(UIElement*);
 		void PaintShadow(UIElement*);

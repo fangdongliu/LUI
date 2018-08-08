@@ -2,6 +2,7 @@
 #include "UIElement.h"
 #include"Window.h"
 #include"App.h"
+#include"Page.h"
 using namespace LUI;
 using namespace std;
 using namespace D2D1;
@@ -17,6 +18,8 @@ namespace {
 UIElement::UIElement()
 {
 	parent = nullptr;
+	before = nullptr;
+	next = nullptr;
 	needMeasure = true;
 	isHidden = false;
 
@@ -33,17 +36,30 @@ UIElement::UIElement()
 
 }
 
-UIElement* UIElement::Copy() {
+UIElement* UIElement::Copy(Page*page) {
 
-	auto n = new UIElement;
+	auto n = CopyData();
 
 	for (auto i : child) {
-		auto e = i->Copy();
+		auto e = i->Copy(page);
 		e->parent = n;
 		n->child.push_back(e);
 	}
 
+	for (int i = n->child.size() - 1; i > 0; i--) {
+		n->child[i]->before = n->child[i - 1];
+		n->child[i - 1]->next = n->child[i];
+	}
+
+	if (id.length()) {
+		n->id = id;
+		page->ids[id] = n;
+	}
+
 	needMeasure = true;
+	n->onchar = onchar;
+	n->onkey = onkey;
+	n->onclick = onclick;
 	n->isHidden = isHidden;
 	n->layout = layout;
 	n->display = display;
@@ -51,15 +67,21 @@ UIElement* UIElement::Copy() {
 	n->displayClass = displayClass;
 	n->name = name;
 	n->hint = hint;
-
 	n->focusable = focusable;
 	n->capturable = capturable;
 	n->disabled = disabled;
+	n->onclick = onclick;
 
 	scrollY = 0.0f;
 	scrollX = 0.0f;
 
 	return n;
+
+}
+
+UIElement* UIElement::CopyData() {
+
+	return new UIElement;
 }
 
 
@@ -155,6 +177,8 @@ void UIElement::OnLayout() {
 
 	maxScrollX = max(contentRect.Width - rect.Width, 0);
 	maxScrollY = max(contentRect.Height - rect.Height, 0);
+	if (scrollX > maxScrollX)scrollX = maxScrollX;
+	if (scrollY > maxScrollY)scrollY = maxScrollY;
 
 }
 
@@ -170,6 +194,7 @@ void UIElement::FindVisible() {
 		if (i->isHidden)
 			continue;
 
+		i->needFindVisible = true;
 		i->rect.X = i->relativePos.X + rect.X - scrollX;
 		i->rect.Y = i->relativePos.Y + rect.Y - scrollY;
 
@@ -187,7 +212,7 @@ UIElement* UIElement::SelectObject(float x, float y) {
 		r.Width += padding.left + padding.right;
 		r.Height += padding.top + padding.bottom;
 
-		if (r.Contains(x, y))
+		if (r.Contains(x, y)&&!(*i)->isHidden&&(*i)->display.opacity!=0.0f&&!(*i)->disabled)
 			return *i;
 	}
 	return nullptr;
@@ -219,10 +244,15 @@ void UIElement::SetAttr(std::string&attr, std::string&value) {
 		capturable,
 		disabled,
 		id,
-		hint
+		hint,
+		onclick,
+		onkey,
+		onchar,
 	};
 
-	static unordered_map<string, Attr>m = {
+	static map<string, Attr>m = {
+		{"onchar",Attr::onchar},
+		{"onkey",Attr::onkey},
 		{"layout",Attr::layout},
 		{"display",Attr::display},
 		{"hide",Attr::hide},
@@ -230,12 +260,22 @@ void UIElement::SetAttr(std::string&attr, std::string&value) {
 		{"capturable",Attr::capturable},
 		{"disabled",Attr::disabled},
 		{"id",Attr::id},
-		{"hint",Attr::hint}
+		{"hint",Attr::hint},
+		{"onclick",Attr::onclick}
 	};
 
 
 	switch (m[attr])
 	{
+	case Attr::onchar:
+		onchar = value;
+		break;
+	case Attr::onkey:
+		onkey = value;
+		break;
+	case Attr::onclick:
+		onclick = value;
+		break;
 	case Attr::layout:
 		layoutClass = value;
 		break;
