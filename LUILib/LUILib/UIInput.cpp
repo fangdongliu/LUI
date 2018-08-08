@@ -609,7 +609,7 @@ void UIInput::SetAttr(string&attr, string&value) {
 		onchar,
 	};
 
-	static unordered_map<string, Attr>m = {
+	static map<string, Attr>m = {
 	{ "value",Attr::text },
 	{"placeHolder",Attr::placeHolder},
 	{"onchar",Attr::onchar}

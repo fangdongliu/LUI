@@ -283,8 +283,6 @@ void Radio::FindVisible() {
 
 bool Radio::OnClick(float, float, Window*) {
 
-	cout << "onclick" << endl;
-
 	if (checked)
 		return false;
 
@@ -503,8 +501,6 @@ void CheckBox::FindVisible() {
 
 bool CheckBox::OnClick(float, float, Window*) {
 
-	cout << "onclick" << endl;
-
 
 	checked = !checked;
 	animated = true;
@@ -667,8 +663,6 @@ void Switch::FindVisible() {
 }
 
 bool Switch::OnClick(float, float, Window*) {
-
-	cout << "onclick" << endl;
 
 
 	checked = !checked;

@@ -1,4 +1,4 @@
-﻿<button>
+﻿
 <draggable>
 <linear float="right">
 <text value="1237890" id="hh"></text>
@@ -12,7 +12,11 @@
 <radio selectedColor='#009900'><text value="234567"/></radio><radio/><radio/><radio/><radio/><radio/>
 </radiogroup>
 <checkbox/><checkbox/><checkbox/><switch/>
+<button/>
+<image src="pic1.jpg"/>
+<image src="pic2.jpg"/>
+<image src="pic3.jpg"/>
+<image src="pic4.jpg"/>
+<image src="pic5.jpg"/>
 </linear>
 </draggable>
-</button>
-

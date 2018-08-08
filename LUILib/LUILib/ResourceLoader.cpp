@@ -8,6 +8,7 @@
 #include"UIInput.h"
 #include"UIButton.h"
 #include"UIDragable.h"
+#include"UIImage.h"
 using namespace LUI;
 using namespace D2D1;
 using namespace std;
@@ -586,7 +587,8 @@ namespace PageLoader {
 			radio,
 			radioGroup,
 			checkbox,
-			swit
+			swit,
+			image,
 		};
 
 		unordered_map<string, Key>keyMap = {
@@ -601,11 +603,17 @@ namespace PageLoader {
 		{"maxmize",Key::maxmize},
 		{"minimize",Key::minimize},
 		{"radio",Key::radio},
-		{"radiogroup",Key::radioGroup}
+		{"radiogroup",Key::radioGroup},
+		{"image",Key::image}
 		};
 
 		switch (keyMap[str])
 		{
+		case Key::image: {
+			auto e = new UIImage;
+			e->name = str;
+			return e;
+		}
 		case Key::swit: {
 			auto e = new Switch;
 			e->name = str;

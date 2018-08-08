@@ -21,8 +21,8 @@ top:250;
 
 }
 button{
-width:(0,1);
-height:(0,1);
+width:(200);
+height:(40);
 
 }
 
@@ -84,4 +84,8 @@ height:(0,1) wrap;
 switch{
 width:(0,1) wrap;
 height:(0,1) wrap;
+}
+
+image{
+width: 200;
 }

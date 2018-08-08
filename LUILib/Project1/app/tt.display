@@ -26,9 +26,23 @@ background:#ff000000;
 close{
 background:#ffffffff;
 color:#ff444444;
-duration:30;
+duration:0.3;
 }
 
 close:hover{
 background:#ffff0000;
+}
+
+button:hover{
+duration:0.3;
+background:#ff888888;
+}
+
+button{
+duration:0.3;
+background:#ff444444;
+}
+button:capture{
+duration:0.3;
+background:#ffaaaaaa;
 }
